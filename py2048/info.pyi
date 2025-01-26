@@ -1,0 +1,6 @@
+#    info.pyi    #
+# Written By GQX #
+
+def readme() -> None: ...
+
+def license() -> None: ...
