@@ -12,15 +12,20 @@ except ModuleNotFoundError:
         except ModuleNotFoundError:
             raise ImportError("Cannot import py2048.const")
 
-class Py2048Block():
+class Py2048Block(object):
     def __init__(
         self,
-        size : int = 4
+        size : int = 4,
+        blocks : list = None,
+        difficulty : int = EASY
     ):
         self.__size = size
-        self.blocks = [[0 for _ in range(size)] for _ in range(size)]
+        if blocks:
+            self.blocks = blocks
+        else:
+            self.blocks = [[0 for _ in range(size)] for _ in range(size)]
         self.score = 0
-        self.difficulty = "Easy"
+        self.difficulty = difficulty
         self.__randAddBlock()
         self.__randAddBlock()
 
@@ -28,7 +33,7 @@ class Py2048Block():
         while True:
             locX, locY = (randrange(0, self.__size), randrange(0, self.__size))
             if self.blocks[locY][locX]: continue
-            if self.difficulty == "Easy":
+            if self.difficulty == EASY:
                 self.blocks[locY][locX] = 2
             else:
                 self.blocks[locY][locX] = choice((2, 4))
@@ -120,4 +125,3 @@ class Py2048Block():
     
     def setDifficulty(self, value):
         self.difficulty = value
-    

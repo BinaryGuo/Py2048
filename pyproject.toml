@@ -1,28 +1,45 @@
 [build-system]
-requires = ["setuptools>=42", "wheel"]
+requires = ["setuptools>=75", "wheel>=0.40"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "play_2048"
-version = "0.1.0"
-description = "A simple 2048 game implementation"
+name = "python2048"
+version = "1.0.0b2"
+description = "Python 2048"
 authors = [
-    { name="Your Name", email="your.email@example.com" }
+    { name = "GQX", email = "kill114514251@outlook.com" }
 ]
-license = { text = "MIT" }
+license = { file = "LICENSE" }
 readme = "README.md"
-requires-python = ">=3.6"
+requires-python = ">=3.10"
 classifiers = [
-    "Programming Language :: Python :: 3",
+    "Intended Audience :: End Users/Desktop",
+    "Intended Audience :: Developers",
+    "Development Status :: 4 - Beta",
+    "Topic :: Software Development :: Libraries :: pygame",
+    "Natural Language :: English",
+    "Natural Language :: Chinese (Simplified)",
     "License :: OSI Approved :: MIT License",
-    "Operating System :: OS Independent",
+    "Environment :: GUI (Graphical User Interface)",
+    "Operating System :: Linux",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.10"
+]
+dependencies = [
+    "pygame>=2.5.0",
+    "pygame_menu>=4.5.0"
 ]
 
 [project.urls]
-Homepage = "https://github.com/yourusername/play_2048"
-Documentation = "https://github.com/yourusername/play_2048/wiki"
-Source = "https://github.com/yourusername/play_2048"
-Tracker = "https://github.com/yourusername/play_2048/issues"
+Homepage = "https://github.com/BinaryGuo/Py2048"
+Documentation = "https://github.com/BinaryGuo/Py2048/wiki"
+Source = "https://github.com/BinaryGuo/Py2048"
+Tracker = "https://github.com/BinaryGuo/Py2048/issues"
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[project.scripts]
+py2048 = "py2048.__main__:main"

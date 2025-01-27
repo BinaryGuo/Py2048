@@ -1,3 +1,5 @@
-recursive-include py2048/data/ *
-recursive-include py2048/info/ *
-recursive-include py2048/assets/ *
+recursive-include src/py2048/data/ *
+recursive-include src/py2048/info/ *
+recursive-include src/py2048/asset/ *
+recursive-include src/py2048/log/ *
+include           src/py2048/tmp/

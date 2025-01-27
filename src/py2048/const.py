@@ -64,16 +64,10 @@ DOWN         = "down"
 DIRECTIONS   = (UP, DOWN, LEFT, RIGHT)
 PGDIRECTIONS = (K_UP, K_DOWN, K_LEFT, K_RIGHT)
 
-# Action
-
-FREEZE       = "freeze"
-MOVE         = "move"
-MERGE        = "merge"
-
 # data
 SCORELIST    = DATADIR + "ScoreList.json"
 RECORD       = DATADIR + "Record.json"
-DATAS = {"ScoreList.json" : [],}
+DATAS = {"ScoreList.json" : [],"Record.json" : {}} # the name of data and default value
 
 # logging
 PY2048LOG    = LOGDIR + "py2048.log"
@@ -85,6 +79,22 @@ WARNING      = 3
 ERROR        = 4
 CRITICAL     = 5
 IMPORTANT    = 6
+LEVELS = ['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL', "IMPORTANT"]
+
+GENERAL      = 1
+USEAPI       = 2
+HIDEMENU     = 3
+
+EASY         = 1
+NORMAL       = 2
+HARD         = 3
+DIFFICULTIES = (EASY, NORMAL, HARD)
+STRDIFFICULT = ("Easy", "Normal", "Hard")
+
+FREEZE       = "freeze"
+MOVE         = "move"
+MERGE        = "merge"
 
 # others
 FAILWAITSECS = 4
+PARAMETERS   = ("name", "endless", "difficulty", "size")

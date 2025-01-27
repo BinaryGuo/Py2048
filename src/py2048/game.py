@@ -5,94 +5,79 @@
 # <<< Foreign Importations >>> #
 import pygame
 import pygame_menu
-from traceback import print_exc ###
+from traceback import print_exc
 from multiprocessing import Process
-from warnings import warn
 from copy import deepcopy ###
 from json import load, dump
 from subprocess import run
 from os.path import exists
+from sys import stderr
 from datetime import datetime
 from time import sleep
 # <<< Internal Importations >>> #
 try:
     from const import *
-    from error import *
     from block import Py2048Block
 except ModuleNotFoundError:
     try:
         from .const import *
-        from .error import *
         from .block import Py2048Block
     except ImportError:
         try:
             from py2048.const import *
-            from py2048.error import *
             from py2048.block import Py2048Block
         except ModuleNotFoundError:
-            raise ImportError("Cannot import py2048.const, py2048.error and py2048.block")
+            raise ImportError("Cannot import py2048.const and py2048.block")
 
 # < Main Class > #
 class Py2048(Process):
     """
-        # Py2048
-        - tips: this discription uses MarkDown format, you can read the formatted version on https://pypi.org/project/py2048/ if the application you are using can't display it well
-        ### Descriptions:
-        This is a simple 2048 game on Python.  
-        This class is based on pygame.  
-        You can use the parameter "API" to control the game with your program.  
-        Before initialize, You can use  
-        >>> Py2048Instance()  
-        or  
-        >>> "Py2048Instance.start()"  
-        to start main loop.  
-        Start the main loop won't block your program, because this class is a child class of multiprocessing.Process.  
-        ### Parameters:
-        - API(bool, default False): set it to True when you want to control the game with your program. You must set those "......API" parameters when you set "API" to True  
-        - operateAPI(multiprocessing.queues.Queue default None): operations  
-
+    Py2048 is a simple 2048 game implemented in Python using pygame. This class inherits from multiprocessing.Process, allowing the game to run in a separate process.
+    The game supports different modes, including general mode, API mode, and hide menu mode. The game can be controlled using the operate method in API mode.
+    The game state can be obtained using the getPuzzle method.
+    The game supports different difficulty levels and endless mode.
+    Please refer to the Python2048 documentation for more information.
     """
     # << Main Function >> #
-    def __init__(
+    def __init__( # 初始化函数
         self,
-        #size : int = 4,
-        name : str = "",
-        useAPI : bool = None,
-        endless : bool = False,
-        logLevel : int = 1
-    ):
-        if logLevel >= 7:
-            self.__logLevel = 6
-        elif logLevel <= 0:
-            self.__logLevel = 1
-        else:
-            self.__logLevel = logLevel
-        self.__logfile = open(PY2048LOG, "w")
-        self.__print("[Info]Launch: Py2048 v1.0.0")
+        mode : int = GENERAL,
+        logLevel : int = DEBUG,
+        **settings
+        ):
+        # <<< Initialize >>> #
+        self.__handleLogSettings(logLevel)
 
-        self.__endless = endless
-        self.__name = name
-        self.__API = useAPI
-        self.__size = 4
+        self.__print("[Info]Launch: Py2048 v1.0.0b2")
+
+        self.__print("[Debug]Check mode")
+        if mode not in (GENERAL, USEAPI, HIDEMENU): self.__print("[Critical]mode must be GENERAL, USEAPI or HIDEMENU")
+        self.__mode = mode
+        self.__print("[Debug]Mode OK")
+
+        if mode == USEAPI or mode == HIDEMENU:
+            self.__print("[Debug]Handle settings")
+            self.__handleGameSettings(settings)
+            self.__print("[Debug]Settings OK")
 
         self.__print("[Debug]Initialize main module: Multiprocessing")
-        super().__init__(target=self.__main)
+        super().__init__(target=self.mainLoop)
         self.__print("[Debug]Initialized OK")
         self.__print("[Info]Ready to start")
 
     def operate(self, command):
-        if self.__API:
+        if self.__mode == USEAPI:
             if self.__status == "playing":
                 if command == "exit":
                     raise SystemExit
                 if command in DIRECTIONS:
                     self.__operateQueue.append(command)
                 else:
-                    raise InvalidCommandError("Invalid command: " + command)
+                    self.__print("[Error]Invalid command: " + command)
             else:
-                raise InvalidAPIOperationError("The game has not started or has ended")
+                self.__print("[Error]The game has not started or has ended")
         else:
-            raise InvalidAPIOperationError("API not enabled")
+            self.__print("[Error]API not enabled")
     
     def getPuzzle(self, checkEmptyInterval : float = 0):
         if checkEmptyInterval:
@@ -105,7 +90,15 @@ class Py2048(Process):
             if len(self.__getPuzzleQueue):
                 return self.__getPuzzleQueue.pop(0)
 
-    def __main(self):
+    def mainLoop(self):
+        """
+        Main loop of the game.
+        This method initializes the game, sets up necessary variables, and enters the main game loop.
+        It handles different game states such as selecting, playing, failed, and ended.
+        It also processes events, updates the display, and controls the game frame rate.
+        The method ensures proper cleanup and exit by calling the quit method in the finally block.
+        """
+
         try:
             self.__print("[Info]Preparing to start")
             self.__print("[Debug]Initialize main module: Pygame Pygame_menu")
@@ -117,9 +110,6 @@ class Py2048(Process):
             self.__print("[Debug]Initialized OK")
 
             ### TODO Print something
-            if not exists(TMPDIR):
-                if run(["mkdir", TMPDIR]).returncode:
-                    raise ShellCommandError(f"error occured in shell command: \"mkdir {TMPDIR}\"")
             self.__updateWindowInfo()
             self.__generateBlockSurfaces()
             pygame.mixer.music.play(-1)
@@ -147,16 +137,18 @@ class Py2048(Process):
                     case "ended": self.__ended()
                     case status if "waiting" in status: self.__waiting()
                     case "pass": pass
-                    case _: raise TaskScheduleError("There are no running UI tasks")
+                    case _: self.__print("[Critical]There are no running UI tasks")
 
                 pygame.display.flip()
                 self.__clock.tick(10)
 
         except KeyboardInterrupt:
-            self.__print("[Debug]Interrupted by keyboard")
+            self.__exceptionOccurred = True
+            self.__print("[Info]Interrupted by keyboard")
         except SystemExit:
             pass
         except:
+            self.__exceptionOccurred = True
             print_exc()
         finally:
             self.__print("[Info]Exit")
@@ -164,7 +156,6 @@ class Py2048(Process):
 
     def __initializeVariables(self):
         self.__font = pygame.font.Font(FONTPATH, 100)  # 使用SourceCodePro, 大小为100
-        self.__block = Py2048Block(self.__size)
         self.__operateQueue = []
         self.__getPuzzleQueue = []
         self.__surfaceIndex = (2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096, 8192, 16384, 32768, 65536, 131072, 262144, 524288, 1048576, 2097152, 4194304)
@@ -176,26 +167,48 @@ class Py2048(Process):
             self.__scoreList = load(open(SCORELIST))
         else:
             self.__scoreList = []
-        if self.__API:
+        if self.__mode == USEAPI or self.__mode == HIDEMENU:
             self.__status = "playing"
         else:
             self.__status = "selecting"
-        self.__menu = pygame_menu.Menu("Welcome To Py2048", self.__window.get_size()[0], self.__window.get_size()[1], theme=pygame_menu.themes.THEME_DARK)
-        self.__nameInput = self.__menu.add.text_input('Player Name: ')
-        self.__difficultySelector = self.__menu.add.selector('Difficulty: ', [("Easy",), ("Normal",)])
-        self.__endlessSelector = self.__menu.add.selector("Endless: ", [("False", False), ("True", True)])
-        self.__musicSelector = self.__menu.add.selector("Music: ", [("Enable",), ("Disable",)])
-        self.__volumeSelector = self.__menu.add.selector("Music Volume: ", [(str(i) + "%", i / 100) for i in range(10, 101, 10)])
-        self.__recordSelector = self.__menu.add.selector("Record Game: ", [("True", True), ("False", False)])
-        self.__menu.add.button('Start', self.__startGame)
-        self.__menu.add.button('Quit', exit)
+            self.__menu = pygame_menu.Menu("Welcome To Py2048", self.__window.get_size()[0], self.__window.get_size()[1], theme=pygame_menu.themes.THEME_DARK)
+            self.__nameInput = self.__menu.add.text_input('Player Name: ')
+            self.__sizeSelector = self.__menu.add.selector("Square Size(Not Available): ", [(str(i), i) for i in range(4, 5)])
+            self.__difficultySelector = self.__menu.add.selector('Difficulty: ', [("Easy", EASY), ("Normal", NORMAL)])
+            self.__endlessSelector = self.__menu.add.selector("Endless: ", [("False", False), ("True", True)])
+            self.__musicSelector = self.__menu.add.selector("Music: ", [("Enable",), ("Disable",)])
+            self.__volumeSelector = self.__menu.add.selector("Music Volume: ", [(str(i) + "%", i / 100) for i in range(10, 101, 10)])
+            self.__recordSelector = self.__menu.add.selector("Record Game: ", [("True", True), ("False", False)])
+            self.__menu.add.button('Start', self.__startGame)
+            self.__menu.add.button('Quit', exit)
         self.__buttonRects = {}
         self.__delButton = None
         self.__waitTime = 0
         self.__tmpMusicValue = 0
         self.__tmpVolumeValue = 0
+        self.__exceptionOccurred = False
         pygame.mixer.init()
         pygame.mixer.music.load(BGM)
+
+    def __handleLogSettings(self, logLevel):
+        tooHigh = False
+        tooLow = False
+
+        if logLevel >= 7:
+            tooHigh = True
+            logLevel = 6
+        elif logLevel <= 0:
+            tooLow = True
+            logLevel = 1
+        else:
+            self.__logLevel = logLevel
+
+        if tooHigh:
+            self.__print("[Warning]logLevel is too high, set it to 6", UserWarning)  # 发出警告，日志级别太高，将其设置为6
+        if tooLow:
+            self.__print("[Warning]logLevel is too low, set it to 1", UserWarning)
+        
+        self.__logfile = open(PY2048LOG, "a")
 
     def __handleEvents(self):
         for event in self.__events:
@@ -203,7 +216,7 @@ class Py2048(Process):
             if event.type == pygame.QUIT:
                 raise SystemExit # exit
             
-            if self.__status == "playing" and not self.__API and event.type == pygame.KEYDOWN and event.key in PGDIRECTIONS:
+            if self.__status == "playing" and not self.__mode == USEAPI and event.type == pygame.KEYDOWN and event.key in PGDIRECTIONS:
                 self.__command = DIRECTIONS[PGDIRECTIONS.index(event.key)]
                 self.__print(f"[Debug]Received command: {self.__command}")
 
@@ -216,8 +229,8 @@ class Py2048(Process):
                 for name in self.__buttonRects:
                     if self.__buttonRects[name].collidepoint(event.pos):
                         match name:
-                            case "retry": self.__reInitialize()
-                            case _: InvalidButtonError("Invalid Button Rect in self.__buttonRects.It looks like you illegally modified the buttonRects dictionary, which is not allowed.")
+                            case "retry": self.reInitialize()
+                            case _: self.__print("[Critical]Invalid Button Rect in self.__buttonRects.It looks like you illegally modified the buttonRects dictionary, which is not allowed.")
 
     def __selecting(self):
         self.__menu.update(self.__events)
@@ -240,14 +253,10 @@ class Py2048(Process):
 
     # <<<< Playing >>>> #
     def __playing(self):
-        if self.__API:
+        if self.__mode == USEAPI:
             if len(self.__operateQueue):
                 self.__command = self.__operateQueue.pop(0)
                 self.__print(f"[Debug]Received command: {self.__command}")
-                if self.__command == "exit":
-                    raise SystemExit
-                if self.__command not in DIRECTIONS:
-                    raise InvalidCommandError(f"invalid command: {self.__command}")
 
         if self.__block.move(self.__command):
             self.__updateStatus()
@@ -255,7 +264,7 @@ class Py2048(Process):
         self.__blitBlocks()
         self.__drawBottomBar()
 
-        if self.__command and self.__API:
+        if self.__command and self.__mode == USEAPI:
             self.__getPuzzleQueue.append((self.__status, self.__block.score, self.__block.blocks))
 
     # <<<< Failed >>>> #
@@ -286,6 +295,28 @@ class Py2048(Process):
         self.__status = "pass"
 
     # <<< Other Functions >>> #
+    def __handleGameSettings(self, settings):
+        default_settings = {
+            "name"       : "",
+            "endless"    : False,
+            "difficulty" : EASY,
+            "size"       : 4
+        }
+        default_settings.update(settings)
+
+        for key, value in default_settings.items():
+            if key in PARAMETERS:
+                setattr(self, f"__{key}", value)
+            else:
+                self.__print(f"[Warning]Settings got an unexpected keyword argument '{key}', ignore it")
+
+        if not isinstance(self.__name, str): self.__print("[Critical]name must be a string")
+        if not isinstance(self.__endless, bool): self.__print("[Critical]endless must be a bool")
+        if self.__difficulty not in DIFFICULTIES: self.__print("[Critical]Difficulty must be EASY, NORMAL or HARD")
+
+        if self.__mode == HIDEMENU or self.__mode == USEAPI:
+            if not self.__name: self.__print("[Critical]Name must not be empty when mode is USEAPI or HIDEMENU")
+
     def __drawRestartButton(self):
         buttonRect = pygame.Rect(600, 850, 200, 200)
         pygame.draw.rect(self.__window, RED, buttonRect)
@@ -372,9 +403,9 @@ class Py2048(Process):
         if self.__status == "ended":
             text = "Game Over"
         elif self.__endless:
-            text = "Endless " + self.__block.difficulty
+            text = STRDIFFICULT[self.__block.difficulty - 1] + " Endless"
         else:
-            text = self.__block.difficulty
+            text = STRDIFFICULT[self.__block.difficulty - 1]
         self.__window.blit(self.__font.render(text, True, BLACK),
                            pygame.Rect(0, self.__squareSize + 100, self.__winWidth, 100))
 
@@ -397,13 +428,16 @@ class Py2048(Process):
             blockSurface.blit(textSurface, textSurface.get_rect(center=blockSurface.get_rect().center))
             self.__blockSufaces[idx] = blockSurface
 
-    def __reInitialize(self):
+    def reInitialize(self):
         self.__print("[Info]Restart")
         self.__print("[Debug]Change status to \"selecting\"")
         self.__window = pygame.display.set_mode((830, 1060))
-        self.__status = "selecting"
         del self.__block
-        self.__block = Py2048Block(self.__size)
+        if self.__mode == GENERAL:
+            self.__status = "selecting"
+        else:
+            self.__status = "playing"
+            self.__block = Py2048Block(self.__size)
         self.__delButton = "retry"
 
     def __startGame(self):
@@ -411,30 +445,40 @@ class Py2048(Process):
         self.__window = pygame.display.set_mode((830, 1060), pygame.RESIZABLE)
         self.__status = "playing"
         self.__name = self.__nameInput.get_value()
-        self.__block.setDifficulty(self.__difficultySelector.get_value()[0][0])
+        self.__size = self.__sizeSelector.get_value()[0][1]
         self.__endless = self.__endlessSelector.get_value()[0][1]
-        self.__record = self.__recordSelector.get_value()[0][1]
-        if self.__record:
+        self.__recordFlag = self.__recordSelector.get_value()[0][1]
+        self.__block = Py2048Block(self.__size, None, self.__difficultySelector.get_value()[0][1])
+        if self.__recordFlag:
             self.__record = deepcopy(self.__block.blocks)
+
 
     def __print(self, text : str):
         if eval(text[1:text.index(']')].upper()) >= self.__logLevel:
-            print(text)
+            if text[1] in "WEC":
+                print(text, file=stderr)
+                if text[1] == "C":
+                    self.__exceptionOccurred = True
+                    raise SystemExit
+            else:
+                print(text)
             self.__logfile.write(datetime.now().strftime("%Y/%m/%d-%T:") + text)
 
     def __quit(self):
         dump(self.__scoreList, open(SCORELIST, "w"), indent=4)
-        if self.__record:
+        if self.__recordFlag and self.__name and not self.__exceptionOccurred:
             record = load(open(RECORD))
             recordName = self.__name + datetime.now().strftime("-%Y/%m/%d-%T")
-            print("[]")
-            record[self.__name + datetime.now().strftime("-%Y/%m/%d-%T")] = self.__record
+            print("[Info]Record Name:", recordName)
+            record[recordName] = self.__record
             dump(record, open(RECORD, "w"), indent=4)
+        else:
+            self.__print("[Info]Record not saved")
         pygame.quit()
 
     def __str__(self):
-        return f"Py2048(name={self.__name}, useAPI={self.__API}, endless={self.__endless}, logLevel={self.__logLevel})"
-    
+        self.__print("[Error]You are calling __str__ from Py2048, which is not allowed")
+
     def __hash__(self):
         return super().__hash__()
     
@@ -442,4 +486,8 @@ class Py2048(Process):
         self.start()
     
     def __getattr__(self, name):
-        warn(f"You are accessing a nonexistent attribute: {name}", UserWarning)
+        self.__print(f"[Error]You are accessing a nonexistent attribute: {name}")
+
+# < Main > #
+if __name__ == "__main__":
+    Py2048()()
