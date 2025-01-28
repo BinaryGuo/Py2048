@@ -143,12 +143,10 @@ class Py2048(Process):
                 self.__clock.tick(10)
 
         except KeyboardInterrupt:
-            self.__exceptionOccurred = True
             self.__print("[Info]Interrupted by keyboard")
         except SystemExit:
             pass
         except:
-            self.__exceptionOccurred = True
             print_exc()
         finally:
             self.__print("[Info]Exit")
@@ -163,9 +161,8 @@ class Py2048(Process):
         self.__clock = pygame.time.Clock()
         self.__window = pygame.display.set_mode((830, 1060))
         self.__blockSufaces = [i for i in range(22)]
-        if exists(SCORELIST):
-            self.__scoreList = load(open(SCORELIST))
-        else:
+        self.__scoreList = load(open(SCORELIST))
+        if not self.__scoreList:
             self.__scoreList = []
         if self.__mode == USEAPI or self.__mode == HIDEMENU:
             self.__status = "playing"
@@ -181,12 +178,14 @@ class Py2048(Process):
             self.__recordSelector = self.__menu.add.selector("Record Game: ", [("True", True), ("False", False)])
             self.__menu.add.button('Start', self.__startGame)
             self.__menu.add.button('Quit', exit)
+        self.__record = load(open(RECORD))
+        if not self.__record:
+            self.__record = {}
         self.__buttonRects = {}
         self.__delButton = None
         self.__waitTime = 0
         self.__tmpMusicValue = 0
         self.__tmpVolumeValue = 0
-        self.__exceptionOccurred = False
         pygame.mixer.init()
         pygame.mixer.music.load(BGM)
 
@@ -194,9 +193,9 @@ class Py2048(Process):
         tooHigh = False
         tooLow = False
 
-        if logLevel >= 7:
+        if logLevel >= 6:
             tooHigh = True
-            logLevel = 6
+            logLevel = 5
         elif logLevel <= 0:
             tooLow = True
             logLevel = 1
@@ -204,7 +203,7 @@ class Py2048(Process):
             self.__logLevel = logLevel
 
         if tooHigh:
-            self.__print("[Warning]logLevel is too high, set it to 6", UserWarning)  # 发出警告，日志级别太高，将其设置为6
+            self.__print("[Warning]logLevel is too high, set it to 5", UserWarning)  # 发出警告，日志级别太高，将其设置为5
         if tooLow:
             self.__print("[Warning]logLevel is too low, set it to 1", UserWarning)
         
@@ -273,6 +272,7 @@ class Py2048(Process):
         self.__window.fill(BLACKGREY)
         self.__drawTitleWhenFailed()
         self.__drawScoreList()
+        self.__saveRecord()
         self.__print("[Debug]Change status to \"waiting-ended\"")
         self.__status = "waiting-ended"
         self.__waitTime = FAILWAITSECS
@@ -326,7 +326,7 @@ class Py2048(Process):
                            pygame.Rect(600, 935, 250, 100))
         self.__buttonRects["retry"] = buttonRect
 
-    def __drawScoreList(self): # 220
+    def __drawScoreList(self):
         for idx, nameAndScore in enumerate(self.__scoreList):
             if len(nameAndScore[0]) > 6:
                 name = nameAndScore[0][:4] + ".."
@@ -432,6 +432,7 @@ class Py2048(Process):
         self.__print("[Info]Restart")
         self.__print("[Debug]Change status to \"selecting\"")
         self.__window = pygame.display.set_mode((830, 1060))
+
         del self.__block
         if self.__mode == GENERAL:
             self.__status = "selecting"
@@ -458,22 +459,21 @@ class Py2048(Process):
             if text[1] in "WEC":
                 print(text, file=stderr)
                 if text[1] == "C":
-                    self.__exceptionOccurred = True
                     raise SystemExit
             else:
                 print(text)
             self.__logfile.write(datetime.now().strftime("%Y/%m/%d-%T:") + text)
 
+    def __saveRecord(self):
+        record = load(open(RECORD))
+        recordName = self.__name + datetime.now().strftime("-%Y/%m/%d-%T")
+        self.__print("[Info]Record Name:", recordName)
+        record[recordName] = deepcopy(self.__record)
+        dump(record, open(RECORD, "w"), indent=4)
+        del self.__record
+
     def __quit(self):
         dump(self.__scoreList, open(SCORELIST, "w"), indent=4)
-        if self.__recordFlag and self.__name and not self.__exceptionOccurred:
-            record = load(open(RECORD))
-            recordName = self.__name + datetime.now().strftime("-%Y/%m/%d-%T")
-            print("[Info]Record Name:", recordName)
-            record[recordName] = self.__record
-            dump(record, open(RECORD, "w"), indent=4)
-        else:
-            self.__print("[Info]Record not saved")
         pygame.quit()
 
     def __str__(self):
