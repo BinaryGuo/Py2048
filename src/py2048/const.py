@@ -78,7 +78,6 @@ INFO         = 2
 WARNING      = 3
 ERROR        = 4
 CRITICAL     = 5
-IMPORTANT    = 6
 LEVELS = ['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL', "IMPORTANT"]
 
 GENERAL      = 1
