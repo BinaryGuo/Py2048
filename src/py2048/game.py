@@ -6,7 +6,7 @@
 import pygame
 import pygame_menu
 from traceback import print_exc
-from multiprocessing import Process
+from threading import Thread
 from copy import deepcopy ###
 from json import load, dump
 from subprocess import run
@@ -30,7 +30,7 @@ except ModuleNotFoundError:
             raise ImportError("Cannot import py2048.const and py2048.block")
 
 # < Main Class > #
-class Py2048(Process):
+class Py2048(Thread):
     """
     Py2048 is a simple 2048 game implemented in Python using pygame. This class inherits from multiprocessing.Process, allowing the game to run in a separate process.
     The game supports different modes, including general mode, API mode, and hide menu mode. The game can be controlled using the operate method in API mode.
@@ -465,6 +465,7 @@ class Py2048(Process):
             self.__logfile.write(datetime.now().strftime("%Y/%m/%d-%T:") + text)
 
     def __quit(self):
+        try:
         dump(self.__scoreList, open(SCORELIST, "w"), indent=4)
         if self.__recordFlag and self.__name and not self.__exceptionOccurred:
             record = load(open(RECORD))
