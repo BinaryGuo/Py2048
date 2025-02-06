@@ -1,15 +1,18 @@
-#     data.py    #
+#    const.py    #
 # Written By GQX #
 
 from pygame import K_LEFT, K_RIGHT, K_UP, K_DOWN
+from os.path import join as combine
 
 # DIRs
-PACKAGEDIR   = __file__[:-8]
-TMPDIR       = PACKAGEDIR + "tmp/"
-ASSETDIR     = PACKAGEDIR + "asset/"
-TMPDIR       = PACKAGEDIR + "tmp/"
-DATADIR      = PACKAGEDIR + "data/"
-LOGDIR       = PACKAGEDIR + "log/"
+PACKAGEDIR   = __file__[:-9]
+TMPDIR       = combine(PACKAGEDIR, "tmp")
+ASSETDIR     = combine(PACKAGEDIR, "asset")
+DATADIR      = combine(PACKAGEDIR, "data")
+LOGDIR       = combine(PACKAGEDIR, "log")
+
+DATAS        = {"ScoreList": combine(DATADIR, "ScoreList.json"), "Record": combine(DATADIR, "Record.json")} # the name of data 
+LOGS         = {"Playback" : combine(LOGDIR, "Playback.log")   , "Py2048": combine(LOGDIR, "Py2048.log")  }
 
 # Socket
 PORT         = 50000
@@ -22,39 +25,40 @@ WHITE        = (255, 255, 255)
 ORANGE       = (255, 125, 64 )
 RED          = (255, 0  , 0  )
 BLACKGREY    = (50 , 50 , 50 )
-COLORS = (
-    (150, 60 , 120),
-    (80 , 180, 110),
-    (200, 100, 50 ),
-    (70 , 140, 190),
-    (130, 90 , 170),
-    (50 , 100, 220),
-    (190, 50 , 150),
-    (110, 200, 70 ),
-    (60 , 100, 180),
-    (170, 130, 60 ),
-    (90 , 50 , 200),
-    (140, 190, 100),
-    (200, 80 , 130),
-    (160, 70 , 90 ),
-    (50 , 110, 170),
-    (180, 150, 50 ),
-    (120, 60 , 200),
-    (80 , 170, 140),
-    (190, 110, 80 ),
-    (70 , 50 , 160),
-    (130, 200, 90 ),
-    (150, 100, 60 )
-)
+# Ensure colors have high contrast
+COLORS = [
+    (255, 69, 0),    # Orange Red
+    (34, 139, 34),   # Forest Green
+    (30, 144, 255),  # Dodger Blue
+    (255, 99, 71),   # Tomato
+    (255, 140, 0),   # Dark Orange
+    (255, 215, 0),   # Gold
+    (218, 165, 32),  # Goldenrod
+    (154, 205, 50),  # Yellow Green
+    (107, 142, 35),  # Olive Drab
+    (46, 139, 87),   # Sea Green
+    (32, 178, 170),  # Light Sea Green
+    (0, 206, 209),   # Dark Turquoise
+    (70, 130, 180),  # Steel Blue
+    (25, 25, 112),   # Midnight Blue
+    (138, 43, 226),  # Blue Violet
+    (148, 0, 211),   # Dark Violet
+    (139, 0, 139),   # Dark Magenta
+    (199, 21, 133),  # Medium Violet Red
+    (255, 20, 147),  # Deep Pink
+    (255, 105, 180), # Hot Pink
+    (255, 69, 0),    # Orange Red
+    (255, 0, 255)    # Magenta
+]
 
 if DARKMODE:
     BLACK, WHITE = WHITE, BLACK
 
 # Sounds
-BGM          = ASSETDIR + "Nevada.mp3"
+BGM          = combine(ASSETDIR, "Nevada.mp3")
 
 # Fonts
-FONTPATH     = ASSETDIR + "SourceCodePro.ttf"
+FONTPATH     = combine(ASSETDIR, "SourceCodePro.ttf")
 
 # Directions
 LEFT         = "left"
@@ -63,15 +67,6 @@ UP           = "up"
 DOWN         = "down"
 DIRECTIONS   = (UP, DOWN, LEFT, RIGHT)
 PGDIRECTIONS = (K_UP, K_DOWN, K_LEFT, K_RIGHT)
-
-# data
-SCORELIST    = DATADIR + "ScoreList.json"
-RECORD       = DATADIR + "Record.json"
-DATAS = {"ScoreList.json" : [],"Record.json" : {}} # the name of data and default value
-
-# logging
-PY2048LOG    = LOGDIR + "py2048.log"
-PLAYBACKLOG  = LOGDIR + "playback.log"
 
 DEBUG        = 1
 INFO         = 2

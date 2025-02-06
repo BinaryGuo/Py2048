@@ -7,13 +7,12 @@ import pygame
 import pygame_menu
 from traceback import print_exc
 from threading import Thread
-from copy import deepcopy ###
+from copy import deepcopy
 from json import load, dump
-from subprocess import run
-from os.path import exists
 from sys import stderr
 from datetime import datetime
 from time import sleep
+from ctypes import windll
 # <<< Internal Importations >>> #
 try:
     from const import *
@@ -160,15 +159,15 @@ class Py2048(Thread):
         pygame.display.set_caption("Py2048", "Py2048")
         self.__clock = pygame.time.Clock()
         self.__window = pygame.display.set_mode((830, 1060))
-        self.__blockSufaces = [i for i in range(22)]
-        self.__scoreList = load(open(SCORELIST))
+        self.__blockSufaces = [i for i in range(23)]
+        self.__scoreList = load(open(DATAS["ScoreList"]))
         if not self.__scoreList:
             self.__scoreList = []
         if self.__mode == USEAPI or self.__mode == HIDEMENU:
             self.__status = "playing"
         else:
             self.__status = "selecting"
-            self.__menu = pygame_menu.Menu("Welcome To Py2048", self.__window.get_size()[0], self.__window.get_size()[1], theme=pygame_menu.themes.THEME_DARK)
+            self.__menu = pygame_menu.Menu("Welcome To Py2048", self.__window.get_size()[0], self.__window.get_size()[1], theme=pygame_menu.themes.THEME_DARK if DARKMODE else pygame_menu.themes.THEME_BLUE)
             self.__nameInput = self.__menu.add.text_input('Player Name: ')
             self.__sizeSelector = self.__menu.add.selector("Square Size(Not Available): ", [(str(i), i) for i in range(4, 5)])
             self.__difficultySelector = self.__menu.add.selector('Difficulty: ', [("Easy", EASY), ("Normal", NORMAL)])
@@ -178,7 +177,7 @@ class Py2048(Thread):
             self.__recordSelector = self.__menu.add.selector("Record Game: ", [("True", True), ("False", False)])
             self.__menu.add.button('Start', self.__startGame)
             self.__menu.add.button('Quit', exit)
-        self.__record = load(open(RECORD))
+        self.__record = load(open(DATAS["Record"]))
         if not self.__record:
             self.__record = {}
         self.__buttonRects = {}
@@ -207,7 +206,7 @@ class Py2048(Thread):
         if tooLow:
             self.__print("[Warning]logLevel is too low, set it to 1", UserWarning)
         
-        self.__logfile = open(PY2048LOG, "a")
+        self.__logfile = open(LOGS["Py2048"], "a")
 
     def __handleEvents(self):
         for event in self.__events:
@@ -249,6 +248,11 @@ class Py2048(Thread):
             self.__print(f"[Debug]Change music volume to {self.__tmpVolumeValue * 100}%")
 
         self.__menu.draw(self.__window)
+
+        if windll.user32.GetKeyboardLayout(0) & 0xFFFF != 0x0409:
+            font = pygame.font.Font(FONTPATH, 30)
+            self.__window.blit(font.render("Your current keyboard layout is NOT en-US,", True, BLACK), pygame.Rect(0, self.__winHeight - 100, self.__winWidth, 50))
+            self.__window.blit(font.render("so you may not be able to input", True, BLACK), pygame.Rect(0, self.__winHeight - 50, self.__winWidth, 50))
 
     # <<<< Playing >>>> #
     def __playing(self):
@@ -465,16 +469,15 @@ class Py2048(Thread):
             self.__logfile.write(datetime.now().strftime("%Y/%m/%d-%T:") + text)
 
     def __saveRecord(self):
-        record = load(open(RECORD))
+        record = load(open(DATAS["Record"]))
         recordName = self.__name + datetime.now().strftime("-%Y/%m/%d-%T")
         self.__print("[Info]Record Name:", recordName)
         record[recordName] = deepcopy(self.__record)
-        dump(record, open(RECORD, "w"), indent=4)
+        dump(record, open(DATAS["Record"], "w"), indent=4)
         del self.__record
 
     def __quit(self):
-        try:
-        dump(self.__scoreList, open(SCORELIST, "w"), indent=4)
+        dump(self.__scoreList, open(DATAS["ScoreList"], "w"), indent=4)
         pygame.quit()
 
     def __str__(self):

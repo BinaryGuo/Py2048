@@ -1,4 +1,3 @@
-
 from random import randrange, choice
 from copy import deepcopy
 try:
