@@ -11,7 +11,7 @@ ASSETDIR     = combine(PACKAGEDIR, "asset")
 DATADIR      = combine(PACKAGEDIR, "data")
 LOGDIR       = combine(PACKAGEDIR, "log")
 
-DATAS        = {"ScoreList": combine(DATADIR, "ScoreList.json"), "Record": combine(DATADIR, "Record.json")} # the name of data 
+DATAS        = {"ScoreList": (combine(DATADIR, "ScoreList.json"), "[]"), "Record": (combine(DATADIR, "Record.json"), "{}")} # the name of data 
 LOGS         = {"Playback" : combine(LOGDIR, "Playback.log")   , "Py2048": combine(LOGDIR, "Py2048.log")  }
 
 # Socket

@@ -10,9 +10,8 @@ except ModuleNotFoundError:
         from py2048.const import DATAS, LOGS, DATA, LOG
 
 def reset(type):
-    DATAS : dict
     print(f"[Info]Resetting ...")
-    for data, value in DATAS.items():
+    for _, value in DATAS.items():
         with open(data, 'w') as file:
             file.write(value)
     print("[Info]Completed")
