@@ -11,8 +11,21 @@ ASSETDIR     = combine(PACKAGEDIR, "asset")
 DATADIR      = combine(PACKAGEDIR, "data")
 LOGDIR       = combine(PACKAGEDIR, "log")
 
-DATAS        = {"ScoreList": (combine(DATADIR, "ScoreList.json"), "[]"), "Record": (combine(DATADIR, "Record.json"), "{}")} # the name of data 
-LOGS         = {"Playback" : combine(LOGDIR, "Playback.log")   , "Py2048": combine(LOGDIR, "Py2048.log")  }
+DATAS        = {
+    "ScoreList": (
+        combine(DATADIR, "ScoreList.json"),
+        "[]"
+    ),
+    "Record": (
+        combine(DATADIR, "Record.json"),
+        "{}"
+    )
+} # the name of data
+
+LOGS         = {
+    "Playback": combine(LOGDIR, "Playback.log"),
+    "Py2048": combine(LOGDIR, "Py2048.log")
+}
 
 # Socket
 PORT         = 50000
@@ -74,6 +87,10 @@ WARNING      = 3
 ERROR        = 4
 CRITICAL     = 5
 LEVELS = ['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL', "IMPORTANT"]
+
+DATA = 1
+LOG  = 2
+ALL  = 3
 
 GENERAL      = 1
 USEAPI       = 2

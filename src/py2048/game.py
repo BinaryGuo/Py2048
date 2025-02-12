@@ -160,7 +160,7 @@ class Py2048(Thread):
         self.__clock = pygame.time.Clock()
         self.__window = pygame.display.set_mode((830, 1060))
         self.__blockSufaces = [i for i in range(23)]
-        self.__scoreList = load(open(DATAS["ScoreList"]))
+        self.__scoreList = load(open(DATAS["ScoreList"][0]))
         if not self.__scoreList:
             self.__scoreList = []
         if self.__mode == USEAPI or self.__mode == HIDEMENU:
@@ -177,7 +177,7 @@ class Py2048(Thread):
             self.__recordSelector = self.__menu.add.selector("Record Game: ", [("True", True), ("False", False)])
             self.__menu.add.button('Start', self.__startGame)
             self.__menu.add.button('Quit', exit)
-        self.__record = load(open(DATAS["Record"]))
+        self.__record = load(open(DATAS["Record"][0]))
         if not self.__record:
             self.__record = {}
         self.__buttonRects = {}
@@ -469,15 +469,15 @@ class Py2048(Thread):
             self.__logfile.write(datetime.now().strftime("%Y/%m/%d-%T:") + text)
 
     def __saveRecord(self):
-        record = load(open(DATAS["Record"]))
+        record = load(open(DATAS["Record"][0]))
         recordName = self.__name + datetime.now().strftime("-%Y/%m/%d-%T")
         self.__print("[Info]Record Name:", recordName)
         record[recordName] = deepcopy(self.__record)
-        dump(record, open(DATAS["Record"], "w"), indent=4)
+        dump(record, open(DATAS["Record"][0], "w"), indent=4)
         del self.__record
 
     def __quit(self):
-        dump(self.__scoreList, open(DATAS["ScoreList"], "w"), indent=4)
+        dump(self.__scoreList, open(DATAS["ScoreList"][0], "w"), indent=4)
         pygame.quit()
 
     def __str__(self):

@@ -2,23 +2,21 @@
 # Writtem by GQX #
 
 try:
-    from const import DATAS, LOGS, DATA, LOG
+    from const import DATAS, LOGS, DATA, LOG, ALL
 except ModuleNotFoundError:
     try:
-        from .const import DATAS, LOGS, DATA, LOG
+        from .const import DATAS, LOGS, DATA, LOG, ALL
     except ImportError:
-        from py2048.const import DATAS, LOGS, DATA, LOG
+        from py2048.const import DATAS, LOGS, DATA, LOG, ALL
 
-def reset(type):
+def reset(type = ALL):
     print(f"[Info]Resetting ...")
-    for _, value in DATAS.items():
-        with open(data, 'w') as file:
-            file.write(value)
-    print("[Info]Completed")
-
-def rmLogs(sure=False):
-    print(f"[Info]Removing logs ...")
-    for log, value in LOGS.items():
-        with open(log, 'w') as file:
-            file.write("")
+    if type in (DATA, ALL):
+        for data, default in DATAS.values():
+            with open(data, 'w') as file:
+                file.write(default)
+    if type in (LOG, ALL):
+        for log in LOGS.values():
+            with open(log, 'w') as file:
+                file.write("")
     print("[Info]Completed")
